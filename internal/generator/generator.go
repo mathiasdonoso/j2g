@@ -76,6 +76,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	}
 
 	result.WriteString(s.String())
+	result.WriteString("\n")
 
 	return result.String(), nil
 }

@@ -36,10 +36,5 @@ From a curl command
 curl https://api.restful-api.dev/objects | j2g -o file.go
 ```
 
-Customize the struct name
-```bash
-j2g request.json -name Response
-```
-
 ## Contributing
 Feel free to open issues or submit pull requests to improve the tool. Contributions are welcome!
