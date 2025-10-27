@@ -30,5 +30,7 @@ func (j *J2G) Start() error {
 		return err
 	}
 
+	j.Output.Flush()
+
 	return nil
 }

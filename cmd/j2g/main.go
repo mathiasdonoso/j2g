@@ -51,18 +51,13 @@ func main() {
 		writer = os.Stdout
 	}
 
-	r := bufio.NewReader(reader)
-	w := bufio.NewWriter(writer)
-
 	cli := cli.J2G{
-		Input:  r,
-		Output: w,
+		Input:  bufio.NewReader(reader),
+		Output: bufio.NewWriter(writer),
 	}
 
 	err = cli.Start()
 	if err != nil {
 		panic(err)
 	}
-
-	w.Flush()
 }
