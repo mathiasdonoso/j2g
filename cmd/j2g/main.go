@@ -23,11 +23,9 @@ func main() {
 	}
 
 	if stat.Mode()&os.ModeCharDevice == 0 {
-		fmt.Printf("Input is stdin\n")
 		reader = os.Stdin
 	} else {
 		filename := os.Args[1]
-		fmt.Printf("Input is the file %s\n", filename)
 		reader, err = os.Open(filename)
 		if err != nil {
 			panic(err)
@@ -38,7 +36,6 @@ func main() {
 	}
 
 	if *outputPtr != "stdout" {
-		fmt.Printf("Output is the file %s\n", *outputPtr)
 		writer, err = os.Create(*outputPtr)
 		if err != nil {
 			panic(err)
@@ -47,7 +44,6 @@ func main() {
 			defer c.Close()
 		}
 	} else {
-		fmt.Printf("Output is stdout\n")
 		writer = os.Stdout
 	}
 
@@ -60,4 +56,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("\n")
 }
