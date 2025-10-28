@@ -37,12 +37,21 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	title := cases.Title(language.English)
 
 	var nestedStructs []string
-
 	for _, v := range input.Pairs {
+		formatedKey := strings.ReplaceAll(v.Key, "-", "_")
+		sections := strings.Split(formatedKey, "_")
+		formatedSections := sections[:0]
+
+		for _, section := range sections {
+			formatedSections = append(formatedSections, title.String(section))
+		}
+
+		keyName := strings.Join(formatedSections, "_")
+		keyName = strings.ReplaceAll(keyName, "_", "")
 		var vType string
 		if isOrdererMap(v.V) {
 			nestedValue, _ := v.V.(parser.OrdererMap)
-			vType = title.String(v.Key)
+			vType = keyName
 
 			nestedBuilder := Builder{
 				StructName: vType,
@@ -59,11 +68,11 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 
 		vType = fmt.Sprintf("%T", v.V)
 		if vType == "parser.OrdererMap" {
-			vType = title.String(v.Key)
+			vType = keyName
 		}
 
 		s.WriteString("\t")
-		s.WriteString(title.String(v.Key) + " " + vType + " ")
+		s.WriteString(keyName + " " + vType + " ")
 		s.WriteString("`json:\"" + v.Key + "\"`")
 		s.WriteString("\n")
 	}

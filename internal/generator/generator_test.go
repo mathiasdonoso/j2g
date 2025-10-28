@@ -47,10 +47,26 @@ func TestBuildStruct(t *testing.T) {
 		"\tStatus string `json:\"status\"`\n" +
 		"}"
 
-	// {[{items [{[{id 1} {name Item One}]} {[{id 2} {name Item Two}]}]}]}
-	// arrayInput := []parser.OrdererMap{
-	// 	Pairs: []parser.KV,
-	// }
+	// {[{id 12345} {name Joe} {last_name Doe} {pull_count 0} {creation_time 2025-08-05T14:02:08.152Z} {update_time 2025-08-05T14:02:08.152Z}]}
+	camelcaseInput := parser.OrdererMap{
+		Pairs: []parser.KV{
+			{Key: "id", V: 12345},
+			{Key: "name", V: "Joe"},
+			{Key: "last_name", V: "Doe"},
+			{Key: "pull-count", V: 0},
+			{Key: "creation_time_complete", V: "2025-08-05T14:02:08.152Z"},
+			{Key: "update_time-complete", V: "2025-08-05T14:02:08.152Z"},
+		},
+	}
+
+	camelcaseResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+		"\tId int `json:\"id\"`\n" +
+		"\tName string `json:\"name\"`\n" +
+		"\tLastName string `json:\"last_name\"`\n" +
+		"\tPullCount int `json:\"pull-count\"`\n" +
+		"\tCreationTimeComplete string `json:\"creation_time_complete\"`\n" +
+		"\tUpdateTimeComplete string `json:\"update_time-complete\"`\n" +
+		"}"
 
 	tests := []struct {
 		name      string
@@ -68,6 +84,12 @@ func TestBuildStruct(t *testing.T) {
 			"nested",
 			nestedInput,
 			nested,
+			false,
+		},
+		{
+			"camelcase",
+			camelcaseInput,
+			camelcaseResult,
 			false,
 		},
 	}
