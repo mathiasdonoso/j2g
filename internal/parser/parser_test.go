@@ -55,6 +55,15 @@ func TestParseJSON(t *testing.T) {
 		},
 	}
 
+	withNumbersOrdererMap := OrdererMap{
+		Pairs: []KV{
+			{Key: "80/tcp", V: "{}"},
+			{Key: "8080/tcp", V: "{}"},
+			{Key: "8443/tcp", V: "{}"},
+			{Key: "9001/tcp", V: "{}"},
+		},
+	}
+
 	tests := []struct {
 		name               string
 		inputFile          string
@@ -64,7 +73,9 @@ func TestParseJSON(t *testing.T) {
 		{"valid simple", "testdata/simple.json", false, simpleOrdererMap},
 		{"valid array", "testdata/array.json", false, arrayOrdererMap},
 		{"valid nested", "testdata/nested.json", false, nestedOrdererMap},
-		{"valid camelcase", "testdata/camel_case_values.json", false, camelcaseOrdererMap},
+		{"valid camelcase", "testdata/camelcase.json", false, camelcaseOrdererMap},
+		{"valid with numbers", "testdata/with_numbers.json", false, withNumbersOrdererMap},
+		{"valid null values", "testdata/null.json", false, camelcaseOrdererMap},
 		{"valid invalid", "testdata/invalid.json", true, OrdererMap{}},
 	}
 

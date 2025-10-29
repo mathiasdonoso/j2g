@@ -16,7 +16,7 @@ func TestBuildStruct(t *testing.T) {
 		},
 	}
 
-	simple := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+	simpleResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
 		"\tId int `json:\"id\"`\n" +
 		"\tName string `json:\"name\"`\n" +
 		"\tActive bool `json:\"active\"`\n" +
@@ -38,7 +38,7 @@ func TestBuildStruct(t *testing.T) {
 		},
 	}
 
-	nested := "type User struct {\n" +
+	nestedResult := "type User struct {\n" +
 		"\tId int `json:\"id\"`\n" +
 		"\tName string `json:\"name\"`\n" +
 		"}\n\n" +
@@ -68,6 +68,38 @@ func TestBuildStruct(t *testing.T) {
 		"\tUpdateTimeComplete string `json:\"update_time-complete\"`\n" +
 		"}"
 
+	// {[{80/tcp {[]}} {8080/tcp {[]}} {8443/tcp {[]}} {9001/tcp {[]}}]}
+	withNumbersInput := parser.OrdererMap{
+		Pairs: []parser.KV{
+			{Key: "80/tcp", V: map[string]any{}},
+			{Key: "8080/tcp", V: map[string]any{}},
+			{Key: "8443/tcp", V: map[string]any{}},
+			{Key: "9001/tcp", V: map[string]any{}},
+		},
+	}
+
+	withNumbersResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+		"\tN80Tcp any `json:\"80/tcp\"`\n" +
+		"\tN8080Tcp any `json:\"8080/tcp\"`\n" +
+		"\tN8443Tcp any `json:\"8443/tcp\"`\n" +
+		"\tN9001Tcp any `json:\"9001/tcp\"`\n" +
+		"}"
+
+	// {[{id 123} {name <nil>} {lastname {[]}} {jobs []}]}
+	nullInput := parser.OrdererMap{
+		Pairs: []parser.KV{
+			{Key: "id", V: 123},
+			{Key: "name", V: nil},
+			{Key: "lastname", V: map[string]any{}},
+		},
+	}
+
+	nullResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+		"\tId int `json:\"id\"`\n" +
+		"\tName any `json:\"name\"`\n" +
+		"\tLastname any `json:\"lastname\"`\n" +
+		"}"
+
 	tests := []struct {
 		name      string
 		input     parser.OrdererMap
@@ -77,19 +109,31 @@ func TestBuildStruct(t *testing.T) {
 		{
 			"simple",
 			simpleInput,
-			simple,
+			simpleResult,
 			false,
 		},
 		{
 			"nested",
 			nestedInput,
-			nested,
+			nestedResult,
 			false,
 		},
 		{
 			"camelcase",
 			camelcaseInput,
 			camelcaseResult,
+			false,
+		},
+		{
+			"withNumbers",
+			withNumbersInput,
+			withNumbersResult,
+			false,
+		},
+		{
+			"null",
+			nullInput,
+			nullResult,
 			false,
 		},
 	}

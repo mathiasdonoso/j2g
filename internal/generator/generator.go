@@ -2,7 +2,9 @@ package generator
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/mathiasdonoso/j2g/internal/parser"
 	"golang.org/x/text/cases"
@@ -36,18 +38,21 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	s.WriteString("\n")
 	title := cases.Title(language.English)
 
+	const SEPARATOR = "_"
+
 	var nestedStructs []string
 	for _, v := range input.Pairs {
-		formatedKey := strings.ReplaceAll(v.Key, "-", "_")
-		sections := strings.Split(formatedKey, "_")
+		re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
+		formatedKey := re.ReplaceAllString(v.Key, SEPARATOR)
+		sections := strings.Split(formatedKey, SEPARATOR)
 		formatedSections := sections[:0]
 
 		for _, section := range sections {
 			formatedSections = append(formatedSections, title.String(section))
 		}
 
-		keyName := strings.Join(formatedSections, "_")
-		keyName = strings.ReplaceAll(keyName, "_", "")
+		keyName := strings.Join(formatedSections, SEPARATOR)
+		keyName = strings.ReplaceAll(keyName, SEPARATOR, "")
 		var vType string
 		if isOrdererMap(v.V) {
 			nestedValue, _ := v.V.(parser.OrdererMap)
@@ -69,6 +74,14 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 		vType = fmt.Sprintf("%T", v.V)
 		if vType == "parser.OrdererMap" {
 			vType = keyName
+		}
+
+		if !unicode.IsLetter(rune(keyName[0])) {
+			keyName = "N" + keyName
+		}
+
+		if vType == "map[string]interface {}" || vType == "<nil>" {
+			vType = "any"
 		}
 
 		s.WriteString("\t")
