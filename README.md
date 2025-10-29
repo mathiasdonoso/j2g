@@ -18,22 +18,23 @@ go install github.com/mathiasdonoso/j2g
 ```
 
 ## Usage
-By default, **j2g** reads from **stdin** and prints the generated Go code to **stdout**,
-but you can also specify a file to read and a file to write using the appropriate arguments and flags.
+**j2g** works exclusively with standard input and output.
+It reads JSON from stdin and prints the generated Go code to stdout.
+This makes it easy to use with tools like curl, cat, or pipes in general.
 
 ```bash
-# Create a struct from a JSON file and save it to file.go
-j2g request.json -o file.go
+# Create a struct from a JSON file and print the result to stdout.
+cat request.json | j2g
 ```
 
-Print to stdout (default)
 ```bash
-j2g request.json
+# Create a struct from a JSON file and save the result to file.go.
+cat request.json | j2g > file.go
 ```
 
-From a curl command
 ```bash
-curl https://api.restful-api.dev/objects | j2g -o file.go
+# From a curl command
+curl https://api.restful-api.dev/objects/1 | j2g > structs.go
 ```
 
 ## Contributing
