@@ -11,6 +11,7 @@ func TestBuildStruct(t *testing.T) {
 	simpleInput := parser.OrdererMap{
 		Pairs: []parser.KV{
 			{Key: "id", V: 1},
+			{Key: "value", V: 1.2},
 			{Key: "name", V: "Alice"},
 			{Key: "active", V: true},
 		},
@@ -18,6 +19,7 @@ func TestBuildStruct(t *testing.T) {
 
 	simpleResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
 		"\tId int `json:\"id\"`\n" +
+		"\tValue float64 `json:\"value\"`\n" +
 		"\tName string `json:\"name\"`\n" +
 		"\tActive bool `json:\"active\"`\n" +
 		"}"

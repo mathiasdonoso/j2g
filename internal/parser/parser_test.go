@@ -13,6 +13,7 @@ func TestParseJSON(t *testing.T) {
 	simpleOrdererMap := OrdererMap{
 		Pairs: []KV{
 			{Key: "id", V: 1},
+			{Key: "value", V: 1.2},
 			{Key: "name", V: "Alice"},
 			{Key: "active", V: true},
 		},

@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -76,12 +77,21 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 			vType = keyName
 		}
 
-		if !unicode.IsLetter(rune(keyName[0])) {
-			keyName = "N" + keyName
-		}
-
 		if vType == "map[string]interface {}" || vType == "<nil>" {
 			vType = "any"
+		}
+
+		if _, ok := v.V.(json.Number); ok {
+			stringVal := fmt.Sprintf("%v", v.V)
+			if strings.Contains(stringVal, ".") {
+				vType = "float64"
+			} else {
+				vType = "int"
+			}
+		}
+
+		if !unicode.IsLetter(rune(keyName[0])) {
+			keyName = "N" + keyName
 		}
 
 		s.WriteString("\t")

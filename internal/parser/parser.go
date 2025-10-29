@@ -16,6 +16,7 @@ type OrdererMap struct {
 }
 
 func DecodeJSON(dec *json.Decoder) (OrdererMap, error) {
+	dec.UseNumber()
 	parsedData, err := ParseJSON(dec)
 	if err != nil {
 		return OrdererMap{}, err
