@@ -19,7 +19,7 @@ JSON documents that start with an array ([ ... ]) **are not yet supported**, but
 
 ## Installation
 ```bash
-go install github.com/mathiasdonoso/j2g@latest
+go install github.com/mathiasdonoso/j2g/cmd/j2g@latest
 ```
 
 ## Usage
