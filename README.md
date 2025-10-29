@@ -3,6 +3,7 @@ Generate Go structs from JSON.
 
 ## Warning :warning:
 This project is still in WIP. :construction:
+Expect rough edges and occasional bugs.
 
 ## The problem
 When working with APIs or JSON payloads, you often need to manually write structs that match JSON responses.
