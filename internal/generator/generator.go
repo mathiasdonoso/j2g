@@ -81,6 +81,40 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 			vType = "any"
 		}
 
+		if vType == "[]interface {}" {
+			if len(keyName) > 1 {
+				vType = keyName[:len(keyName)-1]
+			} else {
+				vType = fmt.Sprintf("%sType", keyName)
+			}
+			nestedBuilder := Builder{
+				StructName: vType,
+			}
+			vType = fmt.Sprintf("[]%s", vType)
+
+			arr, ok := v.V.([]any)
+			if !ok {
+				fmt.Printf("error: fields is not a slice\n")
+			}
+
+			var omaps []parser.OrdererMap
+			for _, v := range arr {
+				if m, ok := v.(parser.OrdererMap); ok {
+					omaps = append(omaps, m)
+				}
+			}
+
+			first := omaps[0]
+
+			a, err := nestedBuilder.BuildStruct(first)
+			if err != nil {
+				fmt.Printf("error: %v\n", err)
+			}
+
+			nestedStructs = append(nestedStructs, a)
+			nestedStructs = append(nestedStructs, "\n\n")
+		}
+
 		if _, ok := v.V.(json.Number); ok {
 			stringVal := fmt.Sprintf("%v", v.V)
 			if strings.Contains(stringVal, ".") {
