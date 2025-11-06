@@ -49,6 +49,37 @@ func TestBuildStruct(t *testing.T) {
 		"\tStatus string `json:\"status\"`\n" +
 		"}"
 
+	// {[{items [{[{id 1} {name Item One}]} {[{id 2} {name Item Two}]}]}]}
+	arrayInput := parser.OrdererMap{
+		Pairs: []parser.KV{
+			{
+				Key: "items",
+				V: []interface{}{
+					parser.OrdererMap{
+						Pairs: []parser.KV{
+							{Key: "id", V: 1},
+							{Key: "name", V: "Item One"},
+						},
+					},
+					parser.OrdererMap{
+						Pairs: []parser.KV{
+							{Key: "id", V: 2},
+							{Key: "name", V: "Item Two"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	arrayResult := "type Item struct {\n" +
+		"\tId int `json:\"id\"`\n" +
+		"\tName string `json:\"name\"`\n" +
+		"}\n\n" +
+		"type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+		"\tItems []Item `json:\"items\"`\n" +
+		"}"
+
 	// {[{id 12345} {name Joe} {last_name Doe} {pull_count 0} {creation_time 2025-08-05T14:02:08.152Z} {update_time 2025-08-05T14:02:08.152Z}]}
 	camelcaseInput := parser.OrdererMap{
 		Pairs: []parser.KV{
@@ -118,6 +149,12 @@ func TestBuildStruct(t *testing.T) {
 			"nested",
 			nestedInput,
 			nestedResult,
+			false,
+		},
+		{
+			"array",
+			arrayInput,
+			arrayResult,
 			false,
 		},
 		{
