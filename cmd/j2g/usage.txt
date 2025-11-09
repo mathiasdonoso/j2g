@@ -1,0 +1,12 @@
+j2g — JSON to Go Struct Converter
+
+Usage:
+  j2g < input.json > output.go
+
+Description:
+  j2g reads JSON data from standard input and writes the corresponding Go struct
+  definition to standard output. It’s useful for quickly generating Go types
+  based on example JSON responses or payloads.
+
+Example:
+  cat data.json | j2g > model.go

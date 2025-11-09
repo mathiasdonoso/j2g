@@ -1,0 +1,15 @@
+Error:
+  An error occurred while processing the input.
+  Make sure your JSON is:
+    • properly formatted (valid JSON syntax)
+    • a JSON object, not an array (for example: {"key": "value"} not [{"key": "value"}])
+
+  If you want to use a JSON array, you can extract the first element with jq:
+
+      jq '.[0]' input.json | j2g > model.go
+
+  You can also validate your JSON using:
+
+      jq . < input.json
+
+If the problem persists, check the debug logs or run with DEBUG=1 for more details.
