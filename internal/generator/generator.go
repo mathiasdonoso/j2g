@@ -65,7 +65,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 
 			n, err := nestedBuilder.BuildStruct(nestedValue)
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+				return "", err
 			}
 
 			nestedStructs = append(nestedStructs, n)
@@ -94,7 +94,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 
 			arr, ok := v.V.([]any)
 			if !ok {
-				fmt.Printf("error: fields is not a slice\n")
+				return "", fmt.Errorf("error: fields is not a slice\n")
 			}
 
 			var omaps []parser.OrdererMap
@@ -110,7 +110,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 
 			a, err := nestedBuilder.BuildStruct(first)
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+				return "", err
 			}
 
 			nestedStructs = append(nestedStructs, a)
