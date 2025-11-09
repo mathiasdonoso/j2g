@@ -1,0 +1,19 @@
+type 80Tcp struct {
+}
+
+type 8080Tcp struct {
+}
+
+type 8443Tcp struct {
+}
+
+type 9001Tcp struct {
+}
+
+type Result struct {
+	N80Tcp 80Tcp `json:"80/tcp"`
+	N8080Tcp 8080Tcp `json:"8080/tcp"`
+	N8443Tcp 8443Tcp `json:"8443/tcp"`
+	N9001Tcp 9001Tcp `json:"9001/tcp"`
+}
+

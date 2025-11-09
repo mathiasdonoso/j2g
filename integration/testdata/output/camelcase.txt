@@ -1,0 +1,8 @@
+type Result struct {
+    Id int `json:"id"`
+    Name string `json:"name"`
+    LastName string `json:"last_name"`
+    PullCount int `json:"pull_count"`
+    CreationTime string `json:"creation_time"`
+    UpdateTime string `json:"update_time"`
+}

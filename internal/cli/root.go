@@ -1,16 +1,16 @@
 package cli
 
 import (
-	"bufio"
 	"encoding/json"
+	"io"
 
 	"github.com/mathiasdonoso/j2g/internal/generator"
 	"github.com/mathiasdonoso/j2g/internal/parser"
 )
 
 type J2G struct {
-	Input  *bufio.Reader
-	Output *bufio.Writer
+	Input  io.Reader
+	Output io.Writer
 }
 
 func (j *J2G) Start() error {
@@ -29,8 +29,6 @@ func (j *J2G) Start() error {
 	if err != nil {
 		return err
 	}
-
-	j.Output.Flush()
 
 	return nil
 }
