@@ -1,0 +1,8 @@
+type Item struct {
+	Id int `json:"id"`
+	Name string `json:"name"`
+}
+
+type Result struct {
+	Items []Item `json:"items"`
+}

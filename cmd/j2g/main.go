@@ -9,17 +9,17 @@ import (
 )
 
 func main() {
-	reader := os.Stdin
-	writer := os.Stdout
-
+	input := bufio.NewReader(os.Stdin)
+	output := bufio.NewWriter(os.Stdout)
 	cli := cli.J2G{
-		Input:  bufio.NewReader(reader),
-		Output: bufio.NewWriter(writer),
+		Input:  input,
+		Output: output,
 	}
 
 	err := cli.Start()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("\n")
+	defer fmt.Println()
+	defer output.Flush()
 }

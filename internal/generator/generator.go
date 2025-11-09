@@ -103,8 +103,10 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 					omaps = append(omaps, m)
 				}
 			}
-
-			first := omaps[0]
+			first := parser.OrdererMap{}
+			if len(omaps) > 1 {
+				first = omaps[0]
+			}
 
 			a, err := nestedBuilder.BuildStruct(first)
 			if err != nil {
@@ -113,6 +115,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 
 			nestedStructs = append(nestedStructs, a)
 			nestedStructs = append(nestedStructs, "\n\n")
+
 		}
 
 		if _, ok := v.V.(json.Number); ok {
@@ -142,6 +145,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	}
 
 	result.WriteString(s.String())
+	// result.WriteString("\n")
 
 	return result.String(), nil
 }

@@ -1,0 +1,9 @@
+type Job struct {
+}
+
+type Result struct {
+    Id int `json:"id"`
+    Name any `json:"name"`
+    Lastname string `json:"lastname"`
+    Jobs []Job `json:"jobs"`
+}

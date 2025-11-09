@@ -1,0 +1,9 @@
+type User struct {
+    Id int `json:"id"`
+    Name string `json:"name"`
+}
+
+type Result struct {
+    User User `json:"user"`
+    Status string `json:"status"`
+}
