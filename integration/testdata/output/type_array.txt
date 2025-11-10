@@ -1,0 +1,3 @@
+type Result struct {
+    Items []string `json:"items"`
+}

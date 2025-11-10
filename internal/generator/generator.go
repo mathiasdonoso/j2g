@@ -27,6 +27,7 @@ func isOrdererMap(t any) bool {
 	}
 }
 
+// TODO: Refactor someday
 func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	structName := b.StructName
 
@@ -82,40 +83,54 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 		}
 
 		if vType == "[]interface {}" {
-			if len(keyName) > 1 {
-				vType = keyName[:len(keyName)-1]
-			} else {
-				vType = fmt.Sprintf("%sType", keyName)
-			}
-			nestedBuilder := Builder{
-				StructName: vType,
-			}
-			vType = fmt.Sprintf("[]%s", vType)
-
+			vType = "any"
 			arr, ok := v.V.([]any)
 			if !ok {
 				return "", fmt.Errorf("error: fields is not a slice\n")
 			}
 
-			var omaps []parser.OrdererMap
-			for _, v := range arr {
-				if m, ok := v.(parser.OrdererMap); ok {
-					omaps = append(omaps, m)
+			var arrType string
+			if len(arr) > 0 {
+				arrType = fmt.Sprintf("%T", arr[0])
+				vType = arrType
+			}
+
+			basicType := true
+			if strings.Contains(arrType, "interface") || strings.Contains(arrType, "any") || strings.Contains(arrType, "parser") {
+				basicType = false
+				if len(keyName) > 1 {
+					vType = keyName[:len(keyName)-1]
+				} else {
+					vType = fmt.Sprintf("%sType", keyName)
 				}
 			}
-			first := parser.OrdererMap{}
-			if len(omaps) > 1 {
-				first = omaps[0]
+
+			nestedBuilder := Builder{
+				StructName: vType,
 			}
+			vType = fmt.Sprintf("[]%s", vType)
 
-			a, err := nestedBuilder.BuildStruct(first)
-			if err != nil {
-				return "", err
+			if basicType {
+			} else {
+				var omaps []parser.OrdererMap
+				for _, v := range arr {
+					if m, ok := v.(parser.OrdererMap); ok {
+						omaps = append(omaps, m)
+					}
+				}
+				first := parser.OrdererMap{}
+				if len(omaps) > 1 {
+					first = omaps[0]
+				}
+
+				a, err := nestedBuilder.BuildStruct(first)
+				if err != nil {
+					return "", err
+				}
+
+				nestedStructs = append(nestedStructs, a)
+				nestedStructs = append(nestedStructs, "\n\n")
 			}
-
-			nestedStructs = append(nestedStructs, a)
-			nestedStructs = append(nestedStructs, "\n\n")
-
 		}
 
 		if _, ok := v.V.(json.Number); ok {
@@ -145,7 +160,6 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	}
 
 	result.WriteString(s.String())
-	// result.WriteString("\n")
 
 	return result.String(), nil
 }
