@@ -26,6 +26,8 @@ func TestCli(t *testing.T) {
 		{"nested", "testdata/input/nested.json", "testdata/output/nested.txt", false},
 		{"null", "testdata/input/null.json", "testdata/output/null.txt", false},
 		{"with_numbers", "testdata/input/with_numbers.json", "testdata/output/with_numbers.txt", false},
+		{"type_array", "testdata/input/type_array.json", "testdata/output/type_array.txt", false},
+		{"empty_array", "testdata/input/empty_array.json", "testdata/output/empty_array.txt", false},
 	}
 
 	for _, tt := range tests {
