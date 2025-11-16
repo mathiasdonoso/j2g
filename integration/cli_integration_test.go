@@ -52,6 +52,9 @@ func TestCli(t *testing.T) {
 			}
 
 			if !tt.shouldErr && err == nil {
+				// Strip trailing newline introduced by POSIX text-file semantics.
+				// Editors routinely append a final '\n' even when it's not visible,
+				// but Postman response bodies don't include it—so we normalize here.
 				formattedWant, _ := format.Source([]byte(expectedOutput))
 				formattedGot, _ := format.Source([]byte(out.Bytes()))
 				sWant := strings.TrimSpace(string(formattedWant))
