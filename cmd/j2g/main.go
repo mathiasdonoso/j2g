@@ -18,9 +18,13 @@ var UsageText string
 //go:embed error.txt
 var ErrorText string
 
-func initLogger() {
+func isDebugMode() bool {
 	d, _ := strconv.Atoi(os.Getenv("DEBUG"))
-	if d != 1 {
+	return d == 1
+}
+
+func initLogger() {
+	if !isDebugMode() {
 		return
 	}
 
@@ -33,19 +37,19 @@ func initLogger() {
 }
 
 func checkFlags() {
-	var showHelp = flag.Bool("h", false, "show help")
-	var showHelpLong = flag.Bool("help", false, "show help")
+	var showHelp bool
+	flag.BoolVar(&showHelp, "h", false, "show help")
+	flag.BoolVar(&showHelp, "help", false, "show help")
 	flag.Parse()
 
-	if *showHelp || *showHelpLong {
+	if showHelp {
 		fmt.Printf("\n%s\n", UsageText)
 		os.Exit(0)
 	}
 }
 
 func showErrorMessage() {
-	d, _ := strconv.Atoi(os.Getenv("DEBUG"))
-	if d != 1 {
+	if !isDebugMode() {
 		fmt.Printf("\n%s\n", ErrorText)
 	}
 }
@@ -56,6 +60,11 @@ func main() {
 
 	input := bufio.NewReader(os.Stdin)
 	output := bufio.NewWriter(os.Stdout)
+
+	defer func() {
+		output.Flush()
+		fmt.Println()
+	}()
 
 	cli := cli.J2G{
 		Input:  input,
@@ -68,6 +77,4 @@ func main() {
 		showErrorMessage()
 		os.Exit(1)
 	}
-	defer fmt.Println()
-	defer output.Flush()
 }
