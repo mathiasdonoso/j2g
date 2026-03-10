@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 )
 
 type KV struct {
@@ -15,7 +16,8 @@ type OrdererMap struct {
 	Pairs []KV
 }
 
-func DecodeJSON(dec *json.Decoder) (OrdererMap, error) {
+func DecodeJSON(r io.Reader) (OrdererMap, error) {
+	dec := json.NewDecoder(r)
 	dec.UseNumber()
 	parsedData, err := ParseJSON(dec)
 	if err != nil {
@@ -47,7 +49,11 @@ func ParseJSON(dec *json.Decoder) (any, error) {
 					return nil, err
 				}
 
-				key := keyTok.(string)
+				key, ok := keyTok.(string)
+				if !ok {
+					return nil, fmt.Errorf("expected string key, got %T", keyTok)
+				}
+
 				value, err := ParseJSON(dec)
 				if err != nil {
 					return nil, err
@@ -55,7 +61,9 @@ func ParseJSON(dec *json.Decoder) (any, error) {
 
 				omap.Pairs = append(omap.Pairs, KV{Key: key, V: value})
 			}
-			_, _ = dec.Token() // consume '}'
+			if _, err := dec.Token(); err != nil {
+				return nil, fmt.Errorf("reading closing delimiter: %w", err)
+			}
 			return omap, nil
 
 		case '[':
@@ -67,12 +75,20 @@ func ParseJSON(dec *json.Decoder) (any, error) {
 				}
 				arr = append(arr, val)
 			}
-			_, _ = dec.Token() // consume ']'
+			if _, err := dec.Token(); err != nil {
+				return nil, fmt.Errorf("reading closing delimiter: %w", err)
+			}
 			return arr, nil
+
+		default:
+			// This should never happen for valid token streams: '}' and ']' are
+			// consumed by the closing-delimiter reads above and never reach this switch.
+			return nil, fmt.Errorf("unexpected delimiter: %v", delim)
 		}
+
 	default:
+		// All token types from encoding/json (Delim, json.Number, bool, string, nil)
+		// are handled above. This branch is unreachable for well-formed JSON.
 		return tok, nil
 	}
-
-	return nil, fmt.Errorf("unexpected token: %v", tok)
 }
