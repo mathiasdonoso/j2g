@@ -18,7 +18,7 @@ func TestCli(t *testing.T) {
 		outputFile string
 		shouldErr  bool
 	}{
-		{"invalid", "testdata/input/invalid", "", true},
+		{"invalid", "testdata/input/invalid.json", "", true},
 		{"simple", "testdata/input/simple.json", "testdata/output/simple.txt", false},
 		{"simple_array", "testdata/input/simple_array.json", "testdata/output/simple_array.txt", false},
 		{"array", "testdata/input/array.json", "testdata/output/array.txt", false},
@@ -32,8 +32,14 @@ func TestCli(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			input, _ := os.ReadFile(tt.inputFile)
-			expectedOutput, _ := os.ReadFile(tt.outputFile)
+			input, err := os.ReadFile(tt.inputFile)
+			if err != nil {
+				t.Fatalf("reading input file: %v", err)
+			}
+			expectedOutput, err := os.ReadFile(tt.outputFile)
+			if !tt.shouldErr && err != nil {
+				t.Fatalf("reading output file: %v", err)
+			}
 			var out bytes.Buffer
 
 			j2g := cli.J2G{
@@ -41,7 +47,7 @@ func TestCli(t *testing.T) {
 				Output: &out,
 			}
 
-			err := j2g.Start()
+			err = j2g.Start()
 
 			if tt.shouldErr && err == nil {
 				t.Errorf("expected error but got nil")
