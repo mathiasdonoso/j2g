@@ -9,6 +9,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+
+
 func TestParseJSON(t *testing.T) {
 	simpleOrdererMap := OrdererMap{
 		Pairs: []KV{
@@ -114,7 +116,7 @@ func TestParseJSON(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			data, _ := os.ReadFile(tt.inputFile)
-			result, err := DecodeJSON(json.NewDecoder(bytes.NewReader(data)))
+			result, err := DecodeJSON(bytes.NewReader(data))
 
 			if tt.shouldErr && err == nil {
 				t.Errorf("expected error but got nil")

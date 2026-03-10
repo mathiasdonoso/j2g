@@ -21,126 +21,139 @@ type Builder struct {
 	StructName string
 }
 
+// normalizeFieldName converts a JSON key into a valid, title-cased Go identifier.
+// Non-alphanumeric characters are used as word separators and then removed.
+// For example: "last_name" → "LastName", "80/tcp" → "80Tcp".
+func normalizeFieldName(key string) string {
+	segments := nonAlphanumeric.Split(key, -1)
+	var b strings.Builder
+	for _, seg := range segments {
+		if seg != "" {
+			b.WriteString(titleCaser.String(seg))
+		}
+	}
+	return b.String()
+}
+
+// inferType determines the Go type string for a JSON value v associated with
+// the normalized field name keyName. It returns the Go type, any nested struct
+// definitions that must be emitted before the containing struct, and any error.
+func (b *Builder) inferType(keyName string, v any) (goType string, nestedDefs []string, err error) {
+	// Nested object: recursively build a named struct.
+	if nestedValue, ok := v.(parser.OrdererMap); ok {
+		nestedBuilder := Builder{StructName: keyName}
+		def, err := nestedBuilder.BuildStruct(nestedValue)
+		if err != nil {
+			return "", nil, err
+		}
+		return keyName, []string{def}, nil
+	}
+
+	// Array: determine element type and emit nested struct if needed.
+	if _, ok := v.([]any); ok {
+		arr := v.([]any)
+
+		if len(arr) == 0 {
+			return "[]any", nil, nil
+		}
+
+		arrType := fmt.Sprintf("%T", arr[0])
+
+		// Basic scalar types (e.g. []string, []int, []json.Number).
+		if !strings.Contains(arrType, "interface") &&
+			!strings.Contains(arrType, "any") &&
+			!strings.Contains(arrType, "parser") {
+			return "[]" + arrType, nil, nil
+		}
+
+		// Complex element type: derive struct name from field name via singularize.
+		var elemTypeName string
+		if len(keyName) > 1 {
+			elemTypeName = keyName[:len(keyName)-1]
+		} else {
+			elemTypeName = fmt.Sprintf("%sType", keyName)
+		}
+
+		// Collect OrdererMap elements and use the first to define the struct.
+		var omaps []parser.OrdererMap
+		for _, elem := range arr {
+			if m, ok := elem.(parser.OrdererMap); ok {
+				omaps = append(omaps, m)
+			}
+		}
+		first := parser.OrdererMap{}
+		if len(omaps) > 0 {
+			first = omaps[0]
+		}
+
+		nestedBuilder := Builder{StructName: elemTypeName}
+		def, err := nestedBuilder.BuildStruct(first)
+		if err != nil {
+			return "", nil, err
+		}
+		return "[]" + elemTypeName, []string{def}, nil
+	}
+
+	// json.Number: distinguish int vs float64 by presence of a decimal point.
+	if jn, ok := v.(json.Number); ok {
+		if strings.Contains(jn.String(), ".") {
+			return "float64", nil, nil
+		}
+		return "int", nil, nil
+	}
+
+	// Basic Go types.
+	switch v.(type) {
+	case string:
+		return "string", nil, nil
+	case bool:
+		return "bool", nil, nil
+	case nil:
+		return "any", nil, nil
+	default:
+		goType := fmt.Sprintf("%T", v)
+		if goType == "map[string]interface {}" {
+			return "any", nil, nil
+		}
+		return goType, nil, nil
+	}
+}
+
 func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	structName := b.StructName
-
 	if structName == "" {
 		structName = defaultStructName
 	}
 
-	s := strings.Builder{}
-	s.WriteString("type " + structName + " struct {")
-	s.WriteString("\n")
+	var fields strings.Builder
+	var allNestedDefs strings.Builder
 
-	const SEPARATOR = "_"
-
-	var out strings.Builder
 	for _, v := range input.Pairs {
-		formattedKey := nonAlphanumeric.ReplaceAllString(v.Key, SEPARATOR)
-		sections := strings.Split(formattedKey, SEPARATOR)
-		formatedSections := sections[:0]
+		keyName := normalizeFieldName(v.Key)
 
-		for _, section := range sections {
-			formatedSections = append(formatedSections, titleCaser.String(section))
+		goType, nestedDefs, err := b.inferType(keyName, v.V)
+		if err != nil {
+			return "", err
 		}
 
-		keyName := strings.Join(formatedSections, SEPARATOR)
-		keyName = strings.ReplaceAll(keyName, SEPARATOR, "")
-		var vType string
-		if nestedValue, ok := v.V.(parser.OrdererMap); ok {
-			vType = keyName
-
-			nestedBuilder := Builder{
-				StructName: vType,
-			}
-
-			n, err := nestedBuilder.BuildStruct(nestedValue)
-			if err != nil {
-				return "", err
-			}
-
-			out.WriteString(n)
-			out.WriteString("\n\n")
-		} else {
-			vType = fmt.Sprintf("%T", v.V)
-
-			if vType == "map[string]interface {}" || vType == "<nil>" {
-				vType = "any"
-			}
-
-			if vType == "[]interface {}" {
-				vType = "any"
-				arr, ok := v.V.([]any)
-				if !ok {
-					return "", fmt.Errorf("fields is not a slice")
-				}
-
-				var arrType string
-				if len(arr) > 0 {
-					arrType = fmt.Sprintf("%T", arr[0])
-					vType = arrType
-				}
-
-				basicType := true
-				if strings.Contains(arrType, "interface") || strings.Contains(arrType, "any") || strings.Contains(arrType, "parser") {
-					basicType = false
-					if len(keyName) > 1 {
-						vType = keyName[:len(keyName)-1]
-					} else {
-						vType = fmt.Sprintf("%sType", keyName)
-					}
-				}
-
-				nestedBuilder := Builder{
-					StructName: vType,
-				}
-				vType = fmt.Sprintf("[]%s", vType)
-
-				if !basicType {
-					var omaps []parser.OrdererMap
-					for _, v := range arr {
-						if m, ok := v.(parser.OrdererMap); ok {
-							omaps = append(omaps, m)
-						}
-					}
-					first := parser.OrdererMap{}
-					if len(omaps) > 0 {
-						first = omaps[0]
-					}
-
-					a, err := nestedBuilder.BuildStruct(first)
-					if err != nil {
-						return "", err
-					}
-
-					out.WriteString(a)
-					out.WriteString("\n\n")
-				}
-			}
+		for _, def := range nestedDefs {
+			allNestedDefs.WriteString(def)
+			allNestedDefs.WriteString("\n\n")
 		}
 
-		if _, ok := v.V.(json.Number); ok {
-			stringVal := fmt.Sprintf("%v", v.V)
-			if strings.Contains(stringVal, ".") {
-				vType = "float64"
-			} else {
-				vType = "int"
-			}
-		}
-
+		// Guard against a numeric first character in the field name.
 		if !unicode.IsLetter(rune(keyName[0])) {
 			keyName = "N" + keyName
 		}
 
-		s.WriteString("\t")
-		s.WriteString(keyName + " " + vType + " ")
-		s.WriteString("`json:\"" + v.Key + "\"`")
-		s.WriteString("\n")
+		fields.WriteString(fmt.Sprintf("\t%s %s `json:\"%s\"`\n", keyName, goType, v.Key))
 	}
 
-	s.WriteString("}")
-
-	out.WriteString(s.String())
+	var out strings.Builder
+	if allNestedDefs.Len() > 0 {
+		out.WriteString(allNestedDefs.String())
+	}
+	out.WriteString(fmt.Sprintf("type %s struct {\n%s}", structName, fields.String()))
 
 	return out.String(), nil
 }

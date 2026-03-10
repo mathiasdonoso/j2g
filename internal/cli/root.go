@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"io"
 	"log/slog"
 
@@ -16,7 +15,7 @@ type J2G struct {
 
 func (j *J2G) Start() error {
 	slog.Debug("decoding json")
-	result, err := parser.DecodeJSON(json.NewDecoder(j.Input))
+	result, err := parser.DecodeJSON(j.Input)
 	if err != nil {
 		return err
 	}
