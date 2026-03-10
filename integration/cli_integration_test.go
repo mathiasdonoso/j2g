@@ -16,19 +16,21 @@ func TestCli(t *testing.T) {
 		name       string
 		inputFile  string
 		outputFile string
+		structName string
 		shouldErr  bool
 	}{
-		{"invalid", "testdata/input/invalid.json", "", true},
-		{"simple", "testdata/input/simple.json", "testdata/output/simple.txt", false},
-		{"simple_array", "testdata/input/simple_array.json", "testdata/output/simple_array.txt", false},
-		{"array", "testdata/input/array.json", "testdata/output/array.txt", false},
-		{"camelcase", "testdata/input/camelcase.json", "testdata/output/camelcase.txt", false},
-		{"nested", "testdata/input/nested.json", "testdata/output/nested.txt", false},
-		{"null", "testdata/input/null.json", "testdata/output/null.txt", false},
-		{"with_numbers", "testdata/input/with_numbers.json", "testdata/output/with_numbers.txt", false},
-		{"type_array", "testdata/input/type_array.json", "testdata/output/type_array.txt", false},
-		{"empty_array", "testdata/input/empty_array.json", "testdata/output/empty_array.txt", false},
-		{"root_array", "testdata/input/root_array.json", "testdata/output/root_array.txt", false},
+		{"invalid", "testdata/input/invalid.json", "", "", true},
+		{"simple", "testdata/input/simple.json", "testdata/output/simple.txt", "", false},
+		{"simple_array", "testdata/input/simple_array.json", "testdata/output/simple_array.txt", "", false},
+		{"array", "testdata/input/array.json", "testdata/output/array.txt", "", false},
+		{"camelcase", "testdata/input/camelcase.json", "testdata/output/camelcase.txt", "", false},
+		{"nested", "testdata/input/nested.json", "testdata/output/nested.txt", "", false},
+		{"null", "testdata/input/null.json", "testdata/output/null.txt", "", false},
+		{"with_numbers", "testdata/input/with_numbers.json", "testdata/output/with_numbers.txt", "", false},
+		{"type_array", "testdata/input/type_array.json", "testdata/output/type_array.txt", "", false},
+		{"empty_array", "testdata/input/empty_array.json", "testdata/output/empty_array.txt", "", false},
+		{"root_array", "testdata/input/root_array.json", "testdata/output/root_array.txt", "", false},
+		{"custom_name", "testdata/input/custom_name.json", "testdata/output/custom_name.txt", "Response", false},
 	}
 
 	for _, tt := range tests {
@@ -44,8 +46,9 @@ func TestCli(t *testing.T) {
 			var out bytes.Buffer
 
 			j2g := cli.J2G{
-				Input:  bytes.NewReader(input),
-				Output: &out,
+				Input:      bytes.NewReader(input),
+				Output:     &out,
+				StructName: tt.structName,
 			}
 
 			err = j2g.Start()

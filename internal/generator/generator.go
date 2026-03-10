@@ -148,10 +148,40 @@ func (b *Builder) BuildFromArray(arr []any) (string, error) {
 	return fmt.Sprintf("%s\n\ntype %s []%s", def, sliceName, elemName), nil
 }
 
+// nestedStructName returns the name of the nested struct that would be generated
+// for the given field value, or an empty string if the field does not produce a
+// named struct.
+func nestedStructName(keyName string, v any) string {
+	if _, ok := v.(parser.OrdererMap); ok {
+		return keyName
+	}
+	if arr, ok := v.([]any); ok && len(arr) > 0 {
+		// Only arrays of objects produce a named nested struct.
+		if _, ok := arr[0].(parser.OrdererMap); ok {
+			if len(keyName) > 1 {
+				return keyName[:len(keyName)-1]
+			}
+			return fmt.Sprintf("%sType", keyName)
+		}
+	}
+	return ""
+}
+
 func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	structName := b.StructName
 	if structName == "" {
 		structName = defaultStructName
+	}
+
+	// Collision detection: only when the caller explicitly set a struct name.
+	if b.StructName != "" {
+		for _, kv := range input.Pairs {
+			keyName := normalizeFieldName(kv.Key)
+			nested := nestedStructName(keyName, kv.V)
+			if nested != "" && nested == structName {
+				return "", fmt.Errorf("--name %q conflicts with a nested struct of the same name", structName)
+			}
+		}
 	}
 
 	var fields strings.Builder

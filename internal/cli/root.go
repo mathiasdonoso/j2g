@@ -10,8 +10,9 @@ import (
 )
 
 type J2G struct {
-	Input  io.Reader
-	Output io.Writer
+	Input      io.Reader
+	Output     io.Writer
+	StructName string
 }
 
 func (j *J2G) Start() error {
@@ -23,7 +24,7 @@ func (j *J2G) Start() error {
 	slog.Debug("json decoded successfully")
 
 	slog.Debug("building structs")
-	builder := generator.Builder{}
+	builder := generator.Builder{StructName: j.StructName}
 	var s string
 
 	switch v := result.(type) {

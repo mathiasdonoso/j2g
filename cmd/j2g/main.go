@@ -36,16 +36,19 @@ func initLogger() {
 	slog.Debug("debug mode enabled")
 }
 
-func checkFlags() {
+func checkFlags() string {
 	var showHelp bool
+	var structName string
 	flag.BoolVar(&showHelp, "h", false, "show help")
 	flag.BoolVar(&showHelp, "help", false, "show help")
+	flag.StringVar(&structName, "name", "", "name of the root Go struct (default \"Result\")")
 	flag.Parse()
 
 	if showHelp {
 		fmt.Printf("\n%s\n", UsageText)
 		os.Exit(0)
 	}
+	return structName
 }
 
 func showErrorMessage() {
@@ -55,7 +58,7 @@ func showErrorMessage() {
 }
 
 func main() {
-	checkFlags()
+	structName := checkFlags()
 	initLogger()
 
 	input := bufio.NewReader(os.Stdin)
@@ -67,8 +70,9 @@ func main() {
 	}()
 
 	cli := cli.J2G{
-		Input:  input,
-		Output: output,
+		Input:      input,
+		Output:     output,
+		StructName: structName,
 	}
 
 	err := cli.Start()
