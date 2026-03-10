@@ -2,7 +2,6 @@ package parser
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 )
@@ -16,20 +15,15 @@ type OrdererMap struct {
 	Pairs []KV
 }
 
-func DecodeJSON(r io.Reader) (OrdererMap, error) {
+func DecodeJSON(r io.Reader) (any, error) {
 	dec := json.NewDecoder(r)
 	dec.UseNumber()
 	parsedData, err := ParseJSON(dec)
 	if err != nil {
-		return OrdererMap{}, err
+		return nil, err
 	}
 
-	data, ok := parsedData.(OrdererMap)
-	if !ok {
-		return OrdererMap{}, errors.New("cannot decode json data")
-	}
-
-	return data, nil
+	return parsedData, nil
 }
 
 func ParseJSON(dec *json.Decoder) (any, error) {

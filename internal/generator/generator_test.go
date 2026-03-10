@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/mathiasdonoso/j2g/internal/parser"
@@ -189,6 +190,135 @@ func TestBuildStruct(t *testing.T) {
 			}
 			if tt.result != result {
 				t.Errorf("malformed result, expected: %+v but got: %+v", tt.result, result)
+			}
+		})
+	}
+}
+
+func TestBuildFromArray(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       []any
+		wantContains []string
+		wantErr     string
+	}{
+		{
+			name: "happy path — array of objects",
+			input: []any{
+				parser.OrdererMap{
+					Pairs: []parser.KV{
+						{Key: "id", V: 1},
+						{Key: "name", V: "Alice"},
+					},
+				},
+				parser.OrdererMap{
+					Pairs: []parser.KV{
+						{Key: "id", V: 2},
+						{Key: "name", V: "Bob"},
+					},
+				},
+			},
+			wantContains: []string{
+				"type Result struct",
+				"Id",
+				"Name",
+				"type Results []Result",
+			},
+		},
+		{
+			name:  "empty array",
+			input: []any{},
+			wantContains: []string{
+				"type Results []interface{}",
+			},
+		},
+		{
+			name:    "scalar first element — int",
+			input:   []any{1, 2, 3},
+			wantErr: "root array element is not a JSON object",
+		},
+		{
+			name:    "scalar first element — string",
+			input:   []any{"a", "b"},
+			wantErr: "root array element is not a JSON object",
+		},
+		{
+			name: "single object element",
+			input: []any{
+				parser.OrdererMap{
+					Pairs: []parser.KV{
+						{Key: "x", V: 1},
+					},
+				},
+			},
+			wantContains: []string{
+				"type Result struct",
+				"type Results []Result",
+			},
+		},
+		{
+			name: "uses first element only",
+			input: []any{
+				parser.OrdererMap{
+					Pairs: []parser.KV{
+						{Key: "x", V: 1},
+					},
+				},
+				parser.OrdererMap{
+					Pairs: []parser.KV{
+						{Key: "x", V: 2},
+						{Key: "y", V: 3},
+					},
+				},
+			},
+			wantContains: []string{
+				"type Result struct",
+				"X int",
+			},
+		},
+		{
+			name: "custom struct name",
+			input: []any{
+				parser.OrdererMap{
+					Pairs: []parser.KV{
+						{Key: "id", V: 1},
+					},
+				},
+			},
+			wantContains: []string{
+				"type Item struct",
+				"type Items []Item",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := Builder{}
+			if tt.name == "custom struct name" {
+				b.StructName = "Item"
+			}
+
+			result, err := b.BuildFromArray(tt.input)
+
+			if tt.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected error %q, got nil", tt.wantErr)
+				}
+				if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Errorf("expected error to contain %q, got: %v", tt.wantErr, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			for _, want := range tt.wantContains {
+				if !strings.Contains(result, want) {
+					t.Errorf("expected output to contain %q, got:\n%s", want, result)
+				}
 			}
 		})
 	}

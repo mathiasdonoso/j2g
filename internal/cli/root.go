@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 
@@ -23,7 +24,17 @@ func (j *J2G) Start() error {
 
 	slog.Debug("building structs")
 	builder := generator.Builder{}
-	s, err := builder.BuildStruct(result)
+	var s string
+
+	switch v := result.(type) {
+	case parser.OrdererMap:
+		s, err = builder.BuildStruct(v)
+	case []any:
+		s, err = builder.BuildFromArray(v)
+	default:
+		return fmt.Errorf("unsupported root JSON type: %T", result)
+	}
+
 	if err != nil {
 		return err
 	}

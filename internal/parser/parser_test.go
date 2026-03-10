@@ -9,9 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-
-
-func TestParseJSON(t *testing.T) {
+func TestDecodeJSON_RootObject(t *testing.T) {
 	simpleOrdererMap := OrdererMap{
 		Pairs: []KV{
 			{Key: "id", V: json.Number("1")},
@@ -98,10 +96,10 @@ func TestParseJSON(t *testing.T) {
 	}
 
 	tests := []struct {
-		name               string
-		inputFile          string
-		shouldErr          bool
-		expectedOrdererMap OrdererMap
+		name     string
+		inputFile string
+		shouldErr bool
+		expected  OrdererMap
 	}{
 		{"valid simple", "testdata/simple.json", false, simpleOrdererMap},
 		{"valid array", "testdata/array.json", false, arrayOrdererMap},
@@ -125,10 +123,44 @@ func TestParseJSON(t *testing.T) {
 				t.Errorf("unexpected error: %v", err)
 			}
 			if !tt.shouldErr {
-				if diff := cmp.Diff(tt.expectedOrdererMap, result); diff != "" {
+				om, ok := result.(OrdererMap)
+				if !ok {
+					t.Fatalf("expected OrdererMap result, got %T", result)
+				}
+				if diff := cmp.Diff(tt.expected, om); diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
+	}
+}
+
+// TestDecodeJSON_RootArray verifies that DecodeJSON returns a []any (not an
+// error) when the top-level JSON value is an array.
+func TestDecodeJSON_RootArray(t *testing.T) {
+	data, err := os.ReadFile("testdata/root_array.json")
+	if err != nil {
+		t.Fatalf("reading testdata: %v", err)
+	}
+
+	result, err := DecodeJSON(bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	arr, ok := result.([]any)
+	if !ok {
+		t.Fatalf("expected []any result, got %T", result)
+	}
+
+	if len(arr) != 2 {
+		t.Fatalf("expected 2 elements, got %d", len(arr))
+	}
+
+	// Each element should be an OrdererMap.
+	for i, elem := range arr {
+		if _, ok := elem.(OrdererMap); !ok {
+			t.Errorf("element %d: expected OrdererMap, got %T", i, elem)
+		}
 	}
 }
