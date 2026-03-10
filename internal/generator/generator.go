@@ -12,7 +12,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-const DEFAULT_STRUCT_NAME = "Result"
+const defaultStructName = "Result"
 
 type Builder struct {
 	StructName string
@@ -27,12 +27,11 @@ func isOrdererMap(t any) bool {
 	}
 }
 
-// TODO: Refactor someday
 func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	structName := b.StructName
 
 	if structName == "" {
-		structName = DEFAULT_STRUCT_NAME
+		structName = defaultStructName
 	}
 
 	s := strings.Builder{}
@@ -86,7 +85,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 			vType = "any"
 			arr, ok := v.V.([]any)
 			if !ok {
-				return "", fmt.Errorf("error: fields is not a slice\n")
+				return "", fmt.Errorf("fields is not a slice")
 			}
 
 			var arrType string
@@ -110,8 +109,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 			}
 			vType = fmt.Sprintf("[]%s", vType)
 
-			if basicType {
-			} else {
+			if !basicType {
 				var omaps []parser.OrdererMap
 				for _, v := range arr {
 					if m, ok := v.(parser.OrdererMap); ok {

@@ -17,7 +17,7 @@ func TestBuildStruct(t *testing.T) {
 		},
 	}
 
-	simpleResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+	simpleResult := "type " + defaultStructName + " struct {\n" +
 		"\tId int `json:\"id\"`\n" +
 		"\tValue float64 `json:\"value\"`\n" +
 		"\tName string `json:\"name\"`\n" +
@@ -44,7 +44,7 @@ func TestBuildStruct(t *testing.T) {
 		"\tId int `json:\"id\"`\n" +
 		"\tName string `json:\"name\"`\n" +
 		"}\n\n" +
-		"type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+		"type " + defaultStructName + " struct {\n" +
 		"\tUser User `json:\"user\"`\n" +
 		"\tStatus string `json:\"status\"`\n" +
 		"}"
@@ -76,7 +76,7 @@ func TestBuildStruct(t *testing.T) {
 		"\tId int `json:\"id\"`\n" +
 		"\tName string `json:\"name\"`\n" +
 		"}\n\n" +
-		"type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+		"type " + defaultStructName + " struct {\n" +
 		"\tItems []Item `json:\"items\"`\n" +
 		"}"
 
@@ -92,7 +92,7 @@ func TestBuildStruct(t *testing.T) {
 		},
 	}
 
-	camelcaseResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+	camelcaseResult := "type " + defaultStructName + " struct {\n" +
 		"\tId int `json:\"id\"`\n" +
 		"\tName string `json:\"name\"`\n" +
 		"\tLastName string `json:\"last_name\"`\n" +
@@ -111,7 +111,7 @@ func TestBuildStruct(t *testing.T) {
 		},
 	}
 
-	withNumbersResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+	withNumbersResult := "type " + defaultStructName + " struct {\n" +
 		"\tN80Tcp any `json:\"80/tcp\"`\n" +
 		"\tN8080Tcp any `json:\"8080/tcp\"`\n" +
 		"\tN8443Tcp any `json:\"8443/tcp\"`\n" +
@@ -127,7 +127,7 @@ func TestBuildStruct(t *testing.T) {
 		},
 	}
 
-	nullResult := "type " + DEFAULT_STRUCT_NAME + " struct {\n" +
+	nullResult := "type " + defaultStructName + " struct {\n" +
 		"\tId int `json:\"id\"`\n" +
 		"\tName any `json:\"name\"`\n" +
 		"\tLastname any `json:\"lastname\"`\n" +
@@ -137,7 +137,7 @@ func TestBuildStruct(t *testing.T) {
 		name      string
 		input     parser.OrdererMap
 		result    string
-		shoudlErr bool
+		shouldErr bool
 	}{
 		{
 			"simple",
@@ -181,10 +181,10 @@ func TestBuildStruct(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			builder := Builder{}
 			result, err := builder.BuildStruct(tt.input)
-			if tt.shoudlErr && err == nil {
+			if tt.shouldErr && err == nil {
 				t.Errorf("expected error but got nil")
 			}
-			if !tt.shoudlErr && err != nil {
+			if !tt.shouldErr && err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
 			if tt.result != result {

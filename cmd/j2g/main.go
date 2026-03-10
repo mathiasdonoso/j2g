@@ -57,10 +57,6 @@ func main() {
 	input := bufio.NewReader(os.Stdin)
 	output := bufio.NewWriter(os.Stdout)
 
-	if input == nil || output == nil {
-		os.Exit(0)
-	}
-
 	cli := cli.J2G{
 		Input:  input,
 		Output: output,

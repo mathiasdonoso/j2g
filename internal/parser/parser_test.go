@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParseJSON(t *testing.T) {
@@ -81,6 +82,19 @@ func TestParseJSON(t *testing.T) {
 		},
 	}
 
+	simpleArrayOrdererMap := OrdererMap{
+		Pairs: []KV{
+			{Key: "items", V: []interface{}{
+				OrdererMap{
+					Pairs: []KV{
+						{Key: "id", V: json.Number("2")},
+						{Key: "name", V: "Item Two"},
+					},
+				},
+			}},
+		},
+	}
+
 	tests := []struct {
 		name               string
 		inputFile          string
@@ -94,6 +108,7 @@ func TestParseJSON(t *testing.T) {
 		{"valid with numbers", "testdata/with_numbers.json", false, withNumbersOrdererMap},
 		{"valid null values", "testdata/null.json", false, nullOrdererMap},
 		{"valid invalid", "testdata/invalid.json", true, OrdererMap{}},
+		{"valid simple array", "testdata/simple_array.json", false, simpleArrayOrdererMap},
 	}
 
 	for _, tt := range tests {
@@ -107,8 +122,10 @@ func TestParseJSON(t *testing.T) {
 			if !tt.shouldErr && err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
-			if !tt.shouldErr && !reflect.DeepEqual(tt.expectedOrdererMap, result) {
-				t.Errorf("expected result to be %+v but got %+v", tt.expectedOrdererMap, result)
+			if !tt.shouldErr {
+				if diff := cmp.Diff(tt.expectedOrdererMap, result); diff != "" {
+					t.Errorf("mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
