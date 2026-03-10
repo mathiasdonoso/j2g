@@ -11,10 +11,6 @@ This is time-consuming and error-prone, especially when dealing with large or de
 **j2g** automates that process.
 It takes JSON input and generates properly formatted Go structs.
 
-## Limitations
-Currently, **j2g** only supports JSON objects (`{ ... }`) as input.
-JSON documents that start with an array (`[ ... ]`) are not yet supported, but support for this format is planned for a future release.
-
 ## Installation
 ```bash
 go install github.com/mathiasdonoso/j2g/cmd/j2g@latest

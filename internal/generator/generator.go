@@ -119,6 +119,35 @@ func (b *Builder) inferType(keyName string, v any) (goType string, nestedDefs []
 	}
 }
 
+// BuildFromArray generates struct definitions for a root-level JSON array.
+// It uses the first element to define the element type and emits a slice alias.
+// If the array is empty, it emits `type Results []interface{}` (using StructName
+// if set). If the first element is not a JSON object, it returns an error.
+func (b *Builder) BuildFromArray(arr []any) (string, error) {
+	elemName := b.StructName
+	if elemName == "" {
+		elemName = defaultStructName
+	}
+	sliceName := elemName + "s"
+
+	if len(arr) == 0 {
+		return fmt.Sprintf("type %s []interface{}", sliceName), nil
+	}
+
+	first, ok := arr[0].(parser.OrdererMap)
+	if !ok {
+		return "", fmt.Errorf("root array element is not a JSON object")
+	}
+
+	elemBuilder := Builder{StructName: elemName}
+	def, err := elemBuilder.BuildStruct(first)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s\n\ntype %s []%s", def, sliceName, elemName), nil
+}
+
 func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	structName := b.StructName
 	if structName == "" {
