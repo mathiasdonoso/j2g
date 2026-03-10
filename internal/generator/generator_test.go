@@ -195,6 +195,103 @@ func TestBuildStruct(t *testing.T) {
 	}
 }
 
+func TestBuildStruct_CustomName(t *testing.T) {
+	input := parser.OrdererMap{
+		Pairs: []parser.KV{
+			{Key: "id", V: 1},
+			{Key: "name", V: "Alice"},
+		},
+	}
+
+	builder := Builder{StructName: "Response"}
+	result, err := builder.BuildStruct(input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result, "type Response struct") {
+		t.Errorf("expected output to contain 'type Response struct', got:\n%s", result)
+	}
+	if strings.Contains(result, "type Result struct") {
+		t.Errorf("expected output NOT to contain 'type Result struct', got:\n%s", result)
+	}
+}
+
+func TestBuildStruct_CollisionWithNestedObject(t *testing.T) {
+	// --name Address conflicts with nested field "address" → struct Address
+	input := parser.OrdererMap{
+		Pairs: []parser.KV{
+			{
+				Key: "address",
+				V: parser.OrdererMap{
+					Pairs: []parser.KV{
+						{Key: "city", V: "NY"},
+					},
+				},
+			},
+		},
+	}
+
+	builder := Builder{StructName: "Address"}
+	_, err := builder.BuildStruct(input)
+	if err == nil {
+		t.Fatalf("expected collision error, got nil")
+	}
+	wantMsg := `--name "Address" conflicts with a nested struct of the same name`
+	if !strings.Contains(err.Error(), wantMsg) {
+		t.Errorf("expected error %q, got: %v", wantMsg, err)
+	}
+}
+
+func TestBuildStruct_CollisionWithArrayElement(t *testing.T) {
+	// --name Item conflicts with nested field "items" → singularized to Item
+	input := parser.OrdererMap{
+		Pairs: []parser.KV{
+			{
+				Key: "items",
+				V: []interface{}{
+					parser.OrdererMap{
+						Pairs: []parser.KV{
+							{Key: "id", V: 1},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	builder := Builder{StructName: "Item"}
+	_, err := builder.BuildStruct(input)
+	if err == nil {
+		t.Fatalf("expected collision error, got nil")
+	}
+	wantMsg := `--name "Item" conflicts with a nested struct of the same name`
+	if !strings.Contains(err.Error(), wantMsg) {
+		t.Errorf("expected error %q, got: %v", wantMsg, err)
+	}
+}
+
+func TestBuildStruct_NoCollisionWhenNameNotSet(t *testing.T) {
+	// Default name "Result" should NOT trigger collision for nested field "address"
+	input := parser.OrdererMap{
+		Pairs: []parser.KV{
+			{
+				Key: "address",
+				V: parser.OrdererMap{
+					Pairs: []parser.KV{
+						{Key: "city", V: "NY"},
+					},
+				},
+			},
+		},
+	}
+
+	builder := Builder{} // no StructName — uses default "Result"
+	_, err := builder.BuildStruct(input)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
 func TestBuildFromArray(t *testing.T) {
 	tests := []struct {
 		name        string

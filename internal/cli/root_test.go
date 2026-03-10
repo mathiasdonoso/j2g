@@ -83,3 +83,69 @@ func TestStart_RootArray_Empty(t *testing.T) {
 		t.Errorf("expected output to contain 'type Results []interface{}', got:\n%s", got)
 	}
 }
+
+func TestStart_CustomStructName_Object(t *testing.T) {
+	input := `{"id": 1, "name": "Alice"}`
+	var out bytes.Buffer
+
+	j2g := J2G{
+		Input:      strings.NewReader(input),
+		Output:     &out,
+		StructName: "Response",
+	}
+
+	if err := j2g.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got := out.String()
+	if !strings.Contains(got, "type Response struct") {
+		t.Errorf("expected output to contain 'type Response struct', got:\n%s", got)
+	}
+	if strings.Contains(got, "type Result struct") {
+		t.Errorf("expected output NOT to contain 'type Result struct', got:\n%s", got)
+	}
+}
+
+func TestStart_CustomStructName_Array(t *testing.T) {
+	input := `[{"id": 1}]`
+	var out bytes.Buffer
+
+	j2g := J2G{
+		Input:      strings.NewReader(input),
+		Output:     &out,
+		StructName: "User",
+	}
+
+	if err := j2g.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got := out.String()
+	if !strings.Contains(got, "type User struct") {
+		t.Errorf("expected output to contain 'type User struct', got:\n%s", got)
+	}
+	if !strings.Contains(got, "type Users []User") {
+		t.Errorf("expected output to contain 'type Users []User', got:\n%s", got)
+	}
+}
+
+func TestStart_EmptyStructName_FallsBackToDefault(t *testing.T) {
+	input := `{"id": 1}`
+	var out bytes.Buffer
+
+	j2g := J2G{
+		Input:      strings.NewReader(input),
+		Output:     &out,
+		StructName: "",
+	}
+
+	if err := j2g.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got := out.String()
+	if !strings.Contains(got, "type Result struct") {
+		t.Errorf("expected output to contain 'type Result struct', got:\n%s", got)
+	}
+}

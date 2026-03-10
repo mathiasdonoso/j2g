@@ -36,6 +36,18 @@ cat request.json | j2g > file.go
 curl https://api.restful-api.dev/objects/1 | j2g > structs.go
 ```
 
+```bash
+# Override the root struct name with --name
+echo '{"id": 1, "name": "Alice"}' | j2g --name Response
+```
+
+## Flags
+
+| Flag | Description | Default |
+|---|---|---|
+| `--name <StructName>` | Name of the root Go struct | `Result` |
+| `-h`, `--help` | Show help message | — |
+
 ## Use with AI agents (experimental idea)
 
 > **Note:** This is an untested hypothesis — I'm not sure if this is a legitimate use case in practice, but it seems worth trying.
