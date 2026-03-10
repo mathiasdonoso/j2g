@@ -14,17 +14,11 @@ import (
 
 const defaultStructName = "Result"
 
+var nonAlphanumeric = regexp.MustCompile(`[^a-zA-Z0-9]+`)
+var titleCaser = cases.Title(language.English)
+
 type Builder struct {
 	StructName string
-}
-
-func isOrdererMap(t any) bool {
-	switch t.(type) {
-	case parser.OrdererMap:
-		return true
-	default:
-		return false
-	}
 }
 
 func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
@@ -37,26 +31,23 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 	s := strings.Builder{}
 	s.WriteString("type " + structName + " struct {")
 	s.WriteString("\n")
-	title := cases.Title(language.English)
 
 	const SEPARATOR = "_"
 
-	var nestedStructs []string
+	var out strings.Builder
 	for _, v := range input.Pairs {
-		re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
-		formatedKey := re.ReplaceAllString(v.Key, SEPARATOR)
-		sections := strings.Split(formatedKey, SEPARATOR)
+		formattedKey := nonAlphanumeric.ReplaceAllString(v.Key, SEPARATOR)
+		sections := strings.Split(formattedKey, SEPARATOR)
 		formatedSections := sections[:0]
 
 		for _, section := range sections {
-			formatedSections = append(formatedSections, title.String(section))
+			formatedSections = append(formatedSections, titleCaser.String(section))
 		}
 
 		keyName := strings.Join(formatedSections, SEPARATOR)
 		keyName = strings.ReplaceAll(keyName, SEPARATOR, "")
 		var vType string
-		if isOrdererMap(v.V) {
-			nestedValue, _ := v.V.(parser.OrdererMap)
+		if nestedValue, ok := v.V.(parser.OrdererMap); ok {
 			vType = keyName
 
 			nestedBuilder := Builder{
@@ -68,66 +59,63 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 				return "", err
 			}
 
-			nestedStructs = append(nestedStructs, n)
-			nestedStructs = append(nestedStructs, "\n\n")
-		}
+			out.WriteString(n)
+			out.WriteString("\n\n")
+		} else {
+			vType = fmt.Sprintf("%T", v.V)
 
-		vType = fmt.Sprintf("%T", v.V)
-		if vType == "parser.OrdererMap" {
-			vType = keyName
-		}
-
-		if vType == "map[string]interface {}" || vType == "<nil>" {
-			vType = "any"
-		}
-
-		if vType == "[]interface {}" {
-			vType = "any"
-			arr, ok := v.V.([]any)
-			if !ok {
-				return "", fmt.Errorf("fields is not a slice")
+			if vType == "map[string]interface {}" || vType == "<nil>" {
+				vType = "any"
 			}
 
-			var arrType string
-			if len(arr) > 0 {
-				arrType = fmt.Sprintf("%T", arr[0])
-				vType = arrType
-			}
-
-			basicType := true
-			if strings.Contains(arrType, "interface") || strings.Contains(arrType, "any") || strings.Contains(arrType, "parser") {
-				basicType = false
-				if len(keyName) > 1 {
-					vType = keyName[:len(keyName)-1]
-				} else {
-					vType = fmt.Sprintf("%sType", keyName)
+			if vType == "[]interface {}" {
+				vType = "any"
+				arr, ok := v.V.([]any)
+				if !ok {
+					return "", fmt.Errorf("fields is not a slice")
 				}
-			}
 
-			nestedBuilder := Builder{
-				StructName: vType,
-			}
-			vType = fmt.Sprintf("[]%s", vType)
+				var arrType string
+				if len(arr) > 0 {
+					arrType = fmt.Sprintf("%T", arr[0])
+					vType = arrType
+				}
 
-			if !basicType {
-				var omaps []parser.OrdererMap
-				for _, v := range arr {
-					if m, ok := v.(parser.OrdererMap); ok {
-						omaps = append(omaps, m)
+				basicType := true
+				if strings.Contains(arrType, "interface") || strings.Contains(arrType, "any") || strings.Contains(arrType, "parser") {
+					basicType = false
+					if len(keyName) > 1 {
+						vType = keyName[:len(keyName)-1]
+					} else {
+						vType = fmt.Sprintf("%sType", keyName)
 					}
 				}
-				first := parser.OrdererMap{}
-				if len(omaps) > 0 {
-					first = omaps[0]
-				}
 
-				a, err := nestedBuilder.BuildStruct(first)
-				if err != nil {
-					return "", err
+				nestedBuilder := Builder{
+					StructName: vType,
 				}
+				vType = fmt.Sprintf("[]%s", vType)
 
-				nestedStructs = append(nestedStructs, a)
-				nestedStructs = append(nestedStructs, "\n\n")
+				if !basicType {
+					var omaps []parser.OrdererMap
+					for _, v := range arr {
+						if m, ok := v.(parser.OrdererMap); ok {
+							omaps = append(omaps, m)
+						}
+					}
+					first := parser.OrdererMap{}
+					if len(omaps) > 0 {
+						first = omaps[0]
+					}
+
+					a, err := nestedBuilder.BuildStruct(first)
+					if err != nil {
+						return "", err
+					}
+
+					out.WriteString(a)
+					out.WriteString("\n\n")
+				}
 			}
 		}
 
@@ -152,12 +140,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 
 	s.WriteString("}")
 
-	result := strings.Builder{}
-	for _, ns := range nestedStructs {
-		result.WriteString(ns)
-	}
+	out.WriteString(s.String())
 
-	result.WriteString(s.String())
-
-	return result.String(), nil
+	return out.String(), nil
 }
