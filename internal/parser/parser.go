@@ -26,7 +26,15 @@ func DecodeJSON(r io.Reader) (any, error) {
 	return parsedData, nil
 }
 
-func ParseJSON(dec *json.Decoder) (any, error) {
+// tokenReader is a subset of *json.Decoder used by ParseJSON. It is an
+// interface so tests can inject controlled token sequences to exercise
+// error branches that json.Decoder itself can never produce.
+type tokenReader interface {
+	Token() (json.Token, error)
+	More() bool
+}
+
+func ParseJSON(dec tokenReader) (any, error) {
 	tok, err := dec.Token()
 	if err != nil {
 		return "", err
