@@ -1,9 +1,7 @@
 # j2g
 Generate Go structs from JSON.
 
-## Warning :warning:
-This project is still in WIP. :construction:
-Expect rough edges and occasional bugs.
+> **Work in progress.** Expect rough edges and occasional bugs.
 
 ## The problem
 When working with APIs or JSON payloads, you often need to manually write structs that match JSON responses.
@@ -13,9 +11,9 @@ This is time-consuming and error-prone, especially when dealing with large or de
 **j2g** automates that process.
 It takes JSON input and generates properly formatted Go structs.
 
-## Limitations :warning:
-Currently, **j2g** only supports JSON objects ({ ... }) as input.
-JSON documents that start with an array ([ ... ]) **are not yet supported**, but support for this format is planned for a future release.
+## Limitations
+Currently, **j2g** only supports JSON objects (`{ ... }`) as input.
+JSON documents that start with an array (`[ ... ]`) are not yet supported, but support for this format is planned for a future release.
 
 ## Installation
 ```bash
