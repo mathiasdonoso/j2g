@@ -119,7 +119,7 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 					}
 				}
 				first := parser.OrdererMap{}
-				if len(omaps) > 1 {
+				if len(omaps) > 0 {
 					first = omaps[0]
 				}
 

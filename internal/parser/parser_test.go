@@ -3,7 +3,6 @@ package parser
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 	"reflect"
 	"testing"
@@ -12,8 +11,8 @@ import (
 func TestParseJSON(t *testing.T) {
 	simpleOrdererMap := OrdererMap{
 		Pairs: []KV{
-			{Key: "id", V: 1},
-			{Key: "value", V: 1.2},
+			{Key: "id", V: json.Number("1")},
+			{Key: "value", V: json.Number("1.2")},
 			{Key: "name", V: "Alice"},
 			{Key: "active", V: true},
 		},
@@ -21,10 +20,18 @@ func TestParseJSON(t *testing.T) {
 
 	arrayOrdererMap := OrdererMap{
 		Pairs: []KV{
-			{Key: "items", V: OrdererMap{
-				Pairs: []KV{
-					{Key: "name", V: "Item One"},
-					{Key: "name", V: "Item Two"},
+			{Key: "items", V: []interface{}{
+				OrdererMap{
+					Pairs: []KV{
+						{Key: "id", V: json.Number("1")},
+						{Key: "name", V: "Item One"},
+					},
+				},
+				OrdererMap{
+					Pairs: []KV{
+						{Key: "id", V: json.Number("2")},
+						{Key: "name", V: "Item Two"},
+					},
 				},
 			}},
 		},
@@ -36,7 +43,7 @@ func TestParseJSON(t *testing.T) {
 				Key: "user",
 				V: OrdererMap{
 					Pairs: []KV{
-						{Key: "id", V: 42},
+						{Key: "id", V: json.Number("42")},
 						{Key: "name", V: "Bob"},
 					},
 				},
@@ -47,10 +54,10 @@ func TestParseJSON(t *testing.T) {
 
 	camelcaseOrdererMap := OrdererMap{
 		Pairs: []KV{
-			{Key: "id", V: 12345},
+			{Key: "id", V: json.Number("12345")},
 			{Key: "name", V: "Joe"},
 			{Key: "last_name", V: "Doe"},
-			{Key: "pull_count", V: 0},
+			{Key: "pull_count", V: json.Number("0")},
 			{Key: "creation_time", V: "2025-08-05T14:02:08.152Z"},
 			{Key: "update_time", V: "2025-08-05T14:02:08.152Z"},
 		},
@@ -58,10 +65,19 @@ func TestParseJSON(t *testing.T) {
 
 	withNumbersOrdererMap := OrdererMap{
 		Pairs: []KV{
-			{Key: "80/tcp", V: "{}"},
-			{Key: "8080/tcp", V: "{}"},
-			{Key: "8443/tcp", V: "{}"},
-			{Key: "9001/tcp", V: "{}"},
+			{Key: "80/tcp", V: OrdererMap{}},
+			{Key: "8080/tcp", V: OrdererMap{}},
+			{Key: "8443/tcp", V: OrdererMap{}},
+			{Key: "9001/tcp", V: OrdererMap{}},
+		},
+	}
+
+	nullOrdererMap := OrdererMap{
+		Pairs: []KV{
+			{Key: "id", V: json.Number("123")},
+			{Key: "name", V: nil},
+			{Key: "lastname", V: ""},
+			{Key: "jobs", V: []interface{}(nil)},
 		},
 	}
 
@@ -76,7 +92,7 @@ func TestParseJSON(t *testing.T) {
 		{"valid nested", "testdata/nested.json", false, nestedOrdererMap},
 		{"valid camelcase", "testdata/camelcase.json", false, camelcaseOrdererMap},
 		{"valid with numbers", "testdata/with_numbers.json", false, withNumbersOrdererMap},
-		{"valid null values", "testdata/null.json", false, camelcaseOrdererMap},
+		{"valid null values", "testdata/null.json", false, nullOrdererMap},
 		{"valid invalid", "testdata/invalid.json", true, OrdererMap{}},
 	}
 
@@ -84,7 +100,6 @@ func TestParseJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			data, _ := os.ReadFile(tt.inputFile)
 			result, err := DecodeJSON(json.NewDecoder(bytes.NewReader(data)))
-			fmt.Printf("structure: %v\n", result)
 
 			if tt.shouldErr && err == nil {
 				t.Errorf("expected error but got nil")
@@ -92,7 +107,7 @@ func TestParseJSON(t *testing.T) {
 			if !tt.shouldErr && err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
-			if !tt.shouldErr && reflect.DeepEqual(tt.expectedOrdererMap, result) {
+			if !tt.shouldErr && !reflect.DeepEqual(tt.expectedOrdererMap, result) {
 				t.Errorf("expected result to be %+v but got %+v", tt.expectedOrdererMap, result)
 			}
 		})

@@ -20,7 +20,7 @@ func TestCli(t *testing.T) {
 	}{
 		{"invalid", "testdata/input/invalid", "", true},
 		{"simple", "testdata/input/simple.json", "testdata/output/simple.txt", false},
-		{"simple_array", "testdata/input/simple.json", "testdata/output/simple.txt", false},
+		{"simple_array", "testdata/input/simple_array.json", "testdata/output/simple_array.txt", false},
 		{"array", "testdata/input/array.json", "testdata/output/array.txt", false},
 		{"camelcase", "testdata/input/camelcase.json", "testdata/output/camelcase.txt", false},
 		{"nested", "testdata/input/nested.json", "testdata/output/nested.txt", false},
