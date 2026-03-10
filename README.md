@@ -49,12 +49,6 @@ curl https://api.example.com/data | j2g
 
 The potential benefit: the agent skips the reasoning step and gets back a correct struct immediately, saving output tokens and avoiding hallucinated types or missed fields. This matters most for large, deeply nested payloads.
 
-**Known limitation:** Root-level JSON arrays (`[...]`) are not yet supported. An agent would need to extract an element first:
-
-```bash
-curl https://api.example.com/data | jq '.[0]' | j2g
-```
-
 If you try this and it works well (or doesn't), feel free to open an issue — feedback on this use case is welcome.
 
 ## Contributing
