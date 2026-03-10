@@ -1,9 +1,7 @@
 # j2g
 Generate Go structs from JSON.
 
-## Warning :warning:
-This project is still in WIP. :construction:
-Expect rough edges and occasional bugs.
+> **Work in progress.** Expect rough edges and occasional bugs.
 
 ## The problem
 When working with APIs or JSON payloads, you often need to manually write structs that match JSON responses.
@@ -37,6 +35,27 @@ cat request.json | j2g > file.go
 # From a curl command
 curl https://api.restful-api.dev/objects/1 | j2g > structs.go
 ```
+
+## Use with AI agents (experimental idea)
+
+> **Note:** This is an untested hypothesis — I'm not sure if this is a legitimate use case in practice, but it seems worth trying.
+
+AI coding agents (like Claude Code, Copilot, etc.) typically generate Go structs from JSON by reasoning about the payload inline — spending tokens on type inference, field name normalization, and nesting. Since `j2g` handles all of that deterministically, an agent with shell access could delegate the work instead:
+
+```bash
+# Agent fetches an API response and pipes it directly to j2g
+curl https://api.example.com/data | j2g
+```
+
+The potential benefit: the agent skips the reasoning step and gets back a correct struct immediately, saving output tokens and avoiding hallucinated types or missed fields. This matters most for large, deeply nested payloads.
+
+**Known limitation:** Root-level JSON arrays (`[...]`) are not yet supported. An agent would need to extract an element first:
+
+```bash
+curl https://api.example.com/data | jq '.[0]' | j2g
+```
+
+If you try this and it works well (or doesn't), feel free to open an issue — feedback on this use case is welcome.
 
 ## Contributing
 Feel free to open issues or submit pull requests to improve the tool. Contributions are welcome.
