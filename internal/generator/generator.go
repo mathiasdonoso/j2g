@@ -159,6 +159,9 @@ func (b *Builder) BuildStruct(input parser.OrdererMap) (string, error) {
 
 	for _, v := range input.Pairs {
 		keyName := normalizeFieldName(v.Key)
+		if keyName == "" {
+			return "", fmt.Errorf("key %q normalizes to an empty identifier", v.Key)
+		}
 
 		goType, nestedDefs, err := b.inferType(keyName, v.V)
 		if err != nil {
