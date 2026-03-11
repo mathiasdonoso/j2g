@@ -41,6 +41,7 @@ func checkFlags() string {
 	var structName string
 	flag.BoolVar(&showHelp, "h", false, "show help")
 	flag.BoolVar(&showHelp, "help", false, "show help")
+	flag.StringVar(&structName, "n", "", "name of the root Go struct (default \"Result\")")
 	flag.StringVar(&structName, "name", "", "name of the root Go struct (default \"Result\")")
 	flag.Parse()
 

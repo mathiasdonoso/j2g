@@ -45,7 +45,7 @@ echo '{"id": 1, "name": "Alice"}' | j2g --name Response
 
 | Flag | Description | Default |
 |---|---|---|
-| `--name <StructName>` | Name of the root Go struct | `Result` |
+| `-n`, `--name <StructName>` | Name of the root Go struct | `Result` |
 | `-h`, `--help` | Show help message | — |
 
 ## Use with AI agents (experimental idea)

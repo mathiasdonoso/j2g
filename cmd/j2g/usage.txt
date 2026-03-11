@@ -4,8 +4,8 @@ Usage:
   j2g [--name <StructName>] < input.json > output.go
 
 Flags:
-  --name <StructName>   Name of the root Go struct (default: Result)
-  -h, --help            Show this help message
+  -n, --name <StructName>   Name of the root Go struct (default: Result)
+  -h, --help                Show this help message
 
 Description:
   j2g reads JSON data from standard input and writes the corresponding Go struct
